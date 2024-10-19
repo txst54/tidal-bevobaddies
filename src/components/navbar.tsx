@@ -3,11 +3,11 @@ import { MagnifyingGlass, User, Bell} from '@phosphor-icons/react';
 
 function NavBar() {
     return (
-        <div className="flex flex-col justify-center h-16 p-4 bg-black">
+        <div className="flex flex-col justify-center h-16 p-4 bg-black border-b border-zinc-800">
             <div className="flex flex-row justify-between">
-                <div className="flex flex-row bg-black">
+                <div className="flex flex-row h-16">
                     <MagnifyingGlass size={24} className="text-white absolute left-50 top-5 z-10" />
-                    <input className="pl-10 py-2 font-urbanist bg-black text-white focus:border-0 focus:outline-none" placeholder="Search" />
+                    <input className="pl-10 pb-2 pt-3 font-urbanist bg-black text-white focus:border-0 focus:outline-none" placeholder="Search" />
                 </div>
                 <div className="flex flex-row items-center">
                     <div className="font-urbanist p-6 hover:cursor-pointer hover:text-zinc-300 text-white transition-all duration-200">
