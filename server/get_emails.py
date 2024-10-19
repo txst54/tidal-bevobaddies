@@ -76,21 +76,18 @@ def run_email():
     gmail_service, _ = google_auth()
     user_id = "me"
 
-    # Search for emails with "dispute" in the subject
-    query = 'subject:"dispute"'
     results = (
         gmail_service.users()
         .messages()
-        .list(userId=user_id, q=query)
+        .list(userId=user_id)
         .execute()
     )
     messages = results.get("messages", [])
 
     if not messages:
-        print("No messages found with 'dispute' in the subject.")
-        return []
+        print("No messages found.")
     else:
-        print("Messages with 'dispute' in the subject:")
+        print("Messages:")
         data = []
         for message in messages:
             email_data = get_email_content(gmail_service, user_id, message["id"])
