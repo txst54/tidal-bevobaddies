@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import Navbar from "@/components/navbar";
+import Navbar from "@/components/homenavbar";
 import { useScroll, useTransform } from "framer-motion";
 import {GoogleGeminiEffect} from "@/components/ui/google-gemini-effect";
 import React from "react";
