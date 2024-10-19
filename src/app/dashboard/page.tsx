@@ -1,6 +1,8 @@
 "use client";
 import NavBar from "@/components/navbar";
 import SideBar from "@/components/sidebar";
+import React from 'react';
+import { useRouter } from 'next/navigation';
 
 const DashboardTh = ({ title, dir, bool }: { title: string; dir: string | undefined, bool: boolean }) => {
     return (
@@ -15,8 +17,6 @@ const DashboardTh = ({ title, dir, bool }: { title: string; dir: string | undefi
         </th>
     );
 };
-
-import React from 'react';
 
 interface ChargebackProps {
     subtitle: string;
@@ -44,6 +44,7 @@ const Chargebacks: React.FC<ChargebackProps> = ({ subtitle, amount, percentage, 
 
 
 const ChargebackTable = () => {
+    const router = useRouter();
     const chargebacks = [
         {
             transactionId: '1234567890',
@@ -97,7 +98,11 @@ const ChargebackTable = () => {
                 </thead>
                 <tbody className="text-zinc-400 text-sm font-light">
                 {chargebacks.map((chargeback, index) => (
-                    <tr key={index} className="border-b border-l border-r border-zinc-800 transition-all duration-200 hover:bg-zinc-800">
+                    <tr key={index}
+                        className="border-b border-l border-r border-zinc-800 transition-all duration-200 hover:bg-zinc-800"
+                    onClick={() => {
+                        router.push(`/review/${chargeback.transactionId}`);
+                    }}>
                         <td className="py-5 px-6 text-left whitespace-nowrap text-zinc-300">{chargeback.transactionId}</td>
                         <td className="py-3 px-6 text-left">{chargeback.cardholderName}</td>
                         <td className="py-3 px-6 text-left">{chargeback.lastFourDigits}</td>
