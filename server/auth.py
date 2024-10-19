@@ -34,6 +34,7 @@ def google_auth():
     calendar_service = build("calendar", "v3", credentials=creds)
     return gmail_service, calendar_service
 
+
 if __name__ == "__main__":
     google_auth()
     print("Google Auth successful!")  # For testing purposes
