@@ -2,20 +2,20 @@ import React from 'react';
 
 function NavBar() {
     return (
-        <div className="flex flex-col justify-center h-16 p-4 bg-white">
+        <div className="flex flex-col justify-center h-16 p-4 bg-black">
             <div className="flex flex-row justify-between">
-                <div className="flex flex-row">
+                <div className="flex flex-row bg-black">
                     <svg className="w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
                         <path className="fill-slate-400" d="M 13 3 C 7.4889971 3 3 7.4889971 3 13 C 3 18.511003 7.4889971 23 13 23 C 15.396508 23 17.597385 22.148986 19.322266 20.736328 L 25.292969 26.707031 A 1.0001 1.0001 0 1 0 26.707031 25.292969 L 20.736328 19.322266 C 22.148986 17.597385 23 15.396508 23 13 C 23 7.4889971 18.511003 3 13 3 z M 13 5 C 17.430123 5 21 8.5698774 21 13 C 21 17.430123 17.430123 21 13 21 C 8.5698774 21 5 17.430123 5 13 C 5 8.5698774 8.5698774 5 13 5 z"/>
                     </svg>
-                    <input className="p-4 font-urbanist text-slate-800 focus:border-0 focus:outline-none" placeholder="Search">
+                    <input className="p-4 font-urbanist bg-black text-zinc-200 focus:border-0 focus:outline-none" placeholder="Search">
                     </input>
                 </div>
                 <div className="flex flex-row items-center">
-                    <div className="font-urbanist font-semibold p-6 hover:cursor-pointer hover:text-slate-600 transition-all duration-200">
+                    <div className="font-urbanist p-6 hover:cursor-pointer hover:text-zinc-300 text-white transition-all duration-200">
                         Support
                     </div>
-                    <div className="font-urbanist font-semibold p-6 hover:cursor-pointer hover:text-slate-600 transition-all duration-200">
+                    <div className="font-urbanist p-6 hover:cursor-pointer hover:text-zinc-300 text-white transition-all duration-200">
                         Settings
                     </div>
                     <div className="px-6 pr-12">
@@ -25,10 +25,10 @@ function NavBar() {
                             <path d="M15.02 19.0601C15.02 20.7101 13.67 22.0601 12.02 22.0601C11.2 22.0601 10.44 21.7201 9.90002 21.1801C9.36002 20.6401 9.02002 19.8801 9.02002 19.0601" stroke="#292D32" stroke-width="1.5" stroke-miterlimit="10" className="stroke-slate-400"/>
                         </svg>
                     </div>
-                    <div className="px-6 bg-gray-100 rounded-full h-10 flex flex-col justify-center">
+                    <div className="px-6 bg-zinc-900 rounded-full h-10 flex flex-col justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-6" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="6" r="4" stroke="#1C274C" stroke-width="1.5" className="stroke-black"/>
-                            <path d="M19.9975 18C20 17.8358 20 17.669 20 17.5C20 15.0147 16.4183 13 12 13C7.58172 13 4 15.0147 4 17.5C4 19.9853 4 22 12 22C14.231 22 15.8398 21.8433 17 21.5634" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" className="stroke-black"/>
+                            <circle cx="12" cy="6" r="4" stroke="#FFFFFFF" stroke-width="1.5" className="stroke-white"/>
+                            <path d="M19.9975 18C20 17.8358 20 17.669 20 17.5C20 15.0147 16.4183 13 12 13C7.58172 13 4 15.0147 4 17.5C4 19.9853 4 22 12 22C14.231 22 15.8398 21.8433 17 21.5634" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" className="stroke-white"/>
                         </svg>
                     </div>
                 </div>
