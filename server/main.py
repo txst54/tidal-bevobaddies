@@ -1,5 +1,7 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
+import os
 app = Flask(__name__)
+MEDIA_FOLDER = os.path.join(os.getcwd(), 'media')
 
 @app.route('/')
 def hello():
@@ -17,6 +19,14 @@ def fetch_requests():
     }
 
     return jsonify(response), 200
+
+
+@app.route('/media/<path:filename>')
+def media_files(filename):
+    try:
+        return send_from_directory(MEDIA_FOLDER, filename)
+    except FileNotFoundError:
+        return "File not found", 404
 
 
 if __name__ == "__main__":

@@ -76,6 +76,11 @@ function ReviewPage() {
         fetchDataFromFirebase(); 
     };
 
+    const openFile = (filename: string) => {
+        const url = `http://localhost:8000/media/${filename}.pdf`;
+        window.open(url, '_blank');
+    }
+
     useEffect(() => {
         fetchDataFromFirebase();
     }, []);
@@ -105,20 +110,29 @@ function ReviewPage() {
                                 <DashboardTh title={"Description"} dir={"left"} bool />
                                 <DashboardTh title={"Type"} dir={"left"} bool />
                                 <DashboardTh title={"Uploaded Date"} dir={"left"} bool />
+                                {/*<DashboardTh title={"File"} dir={"left"} bool />*/}
                             </tr>
                         </thead>
                         <tbody className="text-zinc-400 text-sm font-light">
                             {evidence && Object.keys(evidence).length > 0 ? (
                                 Object.keys(evidence).map((item, index) => (
-                                    <tr key={index} className={`border-b border-zinc-800 transition-all duration-200 hover:bg-zinc-800`}>
+                                    <tr key={index}
+                                        onClick={(e) => {
+                                            console.log("requested file");
+                                            if (evidence[item].filename) {
+                                                openFile(evidence[item].filename);
+                                            }
+                                        }}
+                                        className={`border-b border-zinc-800 transition-all duration-200 hover:bg-zinc-800`}>
                                         <td className="py-4 px-6 text-zinc-300">{evidence[item].description}</td>
                                         <td className="py-4 px-6 text-zinc-300">{evidence[item].type}</td>
                                         <td className="py-4 px-6 text-zinc-300">{evidence[item].uploaded_date}</td>
+                                        {/*<td className="py-4 px-6 text-zinc-300">{evidence[item].filename}</td>*/}
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td className="py-4 px-6 text-zinc-300" colSpan={3}>No evidence provided</td>
+                                <td className="py-4 px-6 text-zinc-300" colSpan={3}>No evidence provided</td>
                                 </tr>
                             )}
                         </tbody>
