@@ -275,5 +275,3 @@ def get_dispute_msgs():
                             """
         agent.chat(email_content)
         agent.reset()
-
-get_dispute_msgs()

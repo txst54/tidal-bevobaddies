@@ -37,6 +37,7 @@ def media_files(filename):
 def refresh_disputes():
     agent.check_dispute()
     agent.check_evidence()
+    agent.get_dispute_msgs()
 
     response = {
         "message": "GET request received successfully",

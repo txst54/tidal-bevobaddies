@@ -172,21 +172,23 @@ function ReviewPage() {
                     </div>
                 </div>
                 <h3 className="font-bold text-zinc-500 text-lg px-8">Dispute Message: </h3>
-                <textarea
-                    className="mx-auto mt-4 w-11/12 min-h-[200px] p-4 bg-zinc-800 text-white rounded-lg resize-none border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    value={dispute.msg ? dispute.msg : ""}
-                    onChange={(e) => {
-                        setDispute((prev) => ({
-                            ...prev,
-                            msg: e.target.value, // Update the text field in the Dispute object
-                        }));
-                    }}
-                    placeholder="AI generated dispute message"
-                    rows={12}
-                    cols={40}
-                >
-                    {dispute.msg ? dispute.msg : ""}
-                </textarea>
+                <div className="flex flex-row justify-center">
+                    <textarea
+                        className="[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] mt-4 w-full mx-8 min-h-[200px] p-4 bg-zinc-800 text-white rounded-lg resize-none border border-zinc-700 focus:outline-none focus:border-zinc-500 transition-all duration-200 "
+                        value={dispute.msg ? dispute.msg : ""}
+                        onChange={(e) => {
+                            setDispute((prev) => ({
+                                ...prev,
+                                msg: e.target.value, // Update the text field in the Dispute object
+                            }));
+                        }}
+                        placeholder="AI generated dispute message"
+                        rows={12}
+                        cols={40}
+                    >
+                        {dispute.msg ? dispute.msg : ""}
+                    </textarea>
+                </div>
                 <div className="flex justify-end space-x-4 m-4 mr-8">
                     <button
                         className="bg-zinc-600 text-white px-4 py-2 rounded hover:bg-zinc-500 transition duration-200"
