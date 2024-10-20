@@ -1,11 +1,15 @@
 from flask import Flask, request, jsonify, send_from_directory
+import agent
 import os
+
 app = Flask(__name__)
 MEDIA_FOLDER = os.path.join(os.getcwd(), 'media')
 
+
 @app.route('/')
 def hello():
-    return "Hello, World!"
+    return "Server is running..."
+
 
 @app.route('/fetch-requests', methods=['GET'])
 def fetch_requests():
@@ -27,6 +31,19 @@ def media_files(filename):
         return send_from_directory(MEDIA_FOLDER, filename)
     except FileNotFoundError:
         return "File not found", 404
+
+
+@app.route('/refresh', methods=['GET'])
+def refresh_disputes():
+    agent.check_dispute()
+    agent.check_evidence()
+
+    response = {
+        "message": "GET request received successfully",
+        "params": {'success': 'ok'}
+    }
+
+    return jsonify(response), 200
 
 
 if __name__ == "__main__":

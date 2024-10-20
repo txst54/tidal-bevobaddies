@@ -233,6 +233,3 @@ def check_evidence():
                         """
         agent.chat(email_content)
         agent.reset()
-
-check_dispute()
-check_evidence()
