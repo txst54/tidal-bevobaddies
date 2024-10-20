@@ -1,10 +1,10 @@
 "use client";
 import NavBar from "@/components/navbar";
 import SideBar from "@/components/sidebar";
-import {useEffect, useState} from "react";
-import {get, getDatabase, ref, set} from "@firebase/database";
-import {app} from "@/app/firebase";
-import {useSearchParams} from "next/navigation";
+import { useEffect, useState } from "react";
+import { get, getDatabase, ref } from "@firebase/database";
+import { app } from "@/app/firebase";
+import { useSearchParams } from "next/navigation";
 
 const DashboardTh = ({ title, dir, bool }: { title: string; dir?: string; bool?: boolean }) => {
     return (
@@ -20,116 +20,109 @@ const DashboardTh = ({ title, dir, bool }: { title: string; dir?: string; bool?:
     );
 };
 
-interface SourceData {
-    avsResponse?: string,
-    billAddresses?: string,
-    conversations?: string,
-    deliveryProof?: string,
-    shippingProof?: string,
-    transactionReceipt?: string
+interface ChargebackProps {
+    name: string;
+    amount: string;
 }
 
-function reviewPage() {
-    const [table, setTable] = useState<SourceData>({});
+const Chargebacks: React.FC<ChargebackProps> = ({ name, amount }) => {
+    return (
+        <div>
+            <h2 className="text-zinc-300 pb-3">{name}</h2>
+            <h2 className="text-zinc-300 text-3xl pb-3">{amount}</h2>
+        </div>
+    );
+};
+
+interface Evidence {
+    desc: string;
+    proof: string;
+    title: string;
+}
+
+interface DisputeData {
+    cardholderName?: string;
+    disputedAmount?: string;
+    evidence?: Evidence[];
+    lastFourDigits?: string;
+    reason?: string;
+    reasonCode?: string;
+    status?: string;
+    transactionDate?: string;
+}
+
+function ReviewPage() {
+    const [dispute, setDispute] = useState<DisputeData>({});
     const searchParams = useSearchParams();
     const transactionId = searchParams.get('id');
+
     const fetchDataFromFirebase = async () => {
         try {
-            const db = getDatabase(app); // Get the Firebase Realtime Database instance
-            const exampleRef = ref(db, `sources/${transactionId}`); // Reference to the "example" path in your database
-            const snapshot = await get(exampleRef); // Get the data once
+            const db = getDatabase(app);
+            const disputesRef = ref(db, `disputes/${transactionId}`);
+            const disputeSnapshot = await get(disputesRef);
 
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                setTable(data);
+            if (disputeSnapshot.exists()) {
+                const disputeData = disputeSnapshot.val();
+                setDispute(disputeData);
             }
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
-    const fetchDataFromEmails = async () => {
-        if (!transactionId) {
-            return false;
-        }
-        try {
-            const response = await fetch(`http://localhost:8000/process-dispute?id=${encodeURIComponent(transactionId)}`, {
-                method: 'GET',
-            });
 
-            if (!response.ok) {
-                throw new Error(`Error: ${response.status}`);
-            }
-
-            // Parse the response as JSON
-            const data = await response.json();
-
-            // Assuming the server responds with { "updated": true } or { "updated": false }
-            const updated = data.updated;
-
-            console.log('Updated status:', updated);
-            return updated;
-        } catch (error) {
-            console.error('Failed to fetch updated status:', error);
-            return false;
-        }
-    }
-    const handleClick = async (e:any) => {
+    const handleClick = async (e: any) => {
         e.preventDefault();
-        fetchDataFromEmails().then((result) => {if (result) {fetchDataFromEmails()}});
+        fetchDataFromFirebase(); 
     };
+
     useEffect(() => {
         fetchDataFromFirebase();
     }, []);
+
+    let evidence = dispute.evidence || []; // Ensure evidence is an array
     return (
         <div className="flex flex-row w-full h-screen bg-black">
             <SideBar />
             <div className="flex flex-col w-full">
                 <NavBar />
+                <div className="m-12">
+                    <h1 className="text-5xl pb-12 bg-gradient-to-br from-white via-black to-black bg-clip-text font-normal text-transparent ">
+                        {dispute.cardholderName} {/* Cardholder Name */}
+                    </h1>
+                    <div className="flex flex-row gap-x-32">
+                        <Chargebacks name="Disputed Amount" amount={dispute.disputedAmount || "N/A"} />
+                        <Chargebacks name="Last Four Digits" amount={dispute.lastFourDigits || "N/A"} />
+                        <Chargebacks name="Status" amount={dispute.status || "Unknown"} />
+                    </div>
+                </div>
                 <div className="flex-grow p-4">
                     <table className="min-w-full border-collapse rounded-lg overflow-hidden shadow-lg">
                         <thead>
-                        <tr className="bg-zinc-900 text-zinc-400 uppercase text-xs">
-                            <DashboardTh title={"Requirements"} dir={"left"} bool/>
-                            <DashboardTh title={"Proofs"} dir={"left"} bool/>
-                        </tr>
+                            <tr className="bg-zinc-900 text-zinc-400 uppercase text-xs">
+                                <DashboardTh title={"Description"} dir={"left"} bool />
+                                <DashboardTh title={"Type"} dir={"left"} bool />
+                                <DashboardTh title={"Uploaded Date"} dir={"left"} bool />
+                            </tr>
                         </thead>
                         <tbody className="text-zinc-400 text-sm font-light">
-                        {[
-                            {
-                                requirement: "Proof of shipping",
-                                proof: table.shippingProof ? table.shippingProof : "NA",
-                            },
-                            {
-                                requirement: "Sales or transaction receipt",
-                                proof: table.transactionReceipt ? table.transactionReceipt : "NA",
-                            },
-                            {
-                                requirement: "Matching bill-to and ship-to addresses",
-                                proof: table.billAddresses ? table.billAddresses : "NA",
-                            },
-                            {
-                                requirement: "Proof of delivery",
-                                proof: table.deliveryProof ? table.deliveryProof : "NA",
-                            },
-                            {
-                                requirement: "Positive AVS response",
-                                proof: table.avsResponse ? table.avsResponse : "NA",
-                            },
-                            {
-                                requirement: "Any conversations with the customer",
-                                proof: table.conversations ? table.conversations : "NA",
-                            }
-                        ].map((item, index) => (
-                            <tr key={index}
-                                className={`border-b border-zinc-800 transition-all duration-200 hover:bg-zinc-800`}>
-                                <td className="py-4 px-6 text-zinc-300">{item.requirement}</td>
-                                <td className="py-4 px-6 text-zinc-300">{item.proof}</td>
-                            </tr>
-                        ))}
+                            {evidence.length > 0 ? (
+                                evidence.map((item, index) => (
+                                    <tr key={index} className={`border-b border-zinc-800 transition-all duration-200 hover:bg-zinc-800`}>
+                                        <td className="py-4 px-6 text-zinc-300">{item.desc}</td>
+                                        <td className="py-4 px-6 text-zinc-300">{item.proof}</td>
+                                        <td className="py-4 px-6 text-zinc-300">{item.title}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td className="py-4 px-6 text-zinc-300" colSpan={3}>No evidence provided</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
 
-                    <div className="flex justify-end space-x-4 mt-4"> {/* Added margin top for spacing */}
+                    <div className="flex justify-end space-x-4 mt-4">
                         <button
                             className="bg-zinc-600 text-white px-4 py-2 rounded hover:bg-zinc-500 transition duration-200"
                             onClick={handleClick}>
@@ -150,4 +143,4 @@ function reviewPage() {
     );
 }
 
-export default reviewPage;
+export default ReviewPage;
