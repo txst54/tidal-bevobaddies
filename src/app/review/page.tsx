@@ -81,6 +81,7 @@ function ReviewPage() {
     }, []);
 
     let evidence = dispute.evidence || []; // Ensure evidence is an array
+    console.log(evidence);
     return (
         <div className="flex flex-row w-full h-screen bg-black">
             <SideBar />
@@ -88,7 +89,7 @@ function ReviewPage() {
                 <NavBar />
                 <div className="m-12">
                     <h1 className="text-5xl pb-12 bg-gradient-to-br from-white via-black to-black bg-clip-text font-normal text-transparent ">
-                        {dispute.cardholderName} {/* Cardholder Name */}
+                        cardholder: {dispute.cardholderName} {/* Cardholder Name */}
                     </h1>
                     <div className="flex flex-row gap-x-32">
                         <Chargebacks name="Disputed Amount" amount={dispute.disputedAmount || "N/A"} />
@@ -96,6 +97,7 @@ function ReviewPage() {
                         <Chargebacks name="Status" amount={dispute.status || "Unknown"} />
                     </div>
                 </div>
+                <h3 className="font-bold text-zinc-500 text-lg px-8">Evidence</h3>
                 <div className="flex-grow p-4">
                     <table className="min-w-full border-collapse rounded-lg overflow-hidden shadow-lg">
                         <thead>
@@ -106,12 +108,12 @@ function ReviewPage() {
                             </tr>
                         </thead>
                         <tbody className="text-zinc-400 text-sm font-light">
-                            {evidence.length > 0 ? (
-                                evidence.map((item, index) => (
+                            {evidence && Object.keys(evidence).length > 0 ? (
+                                Object.keys(evidence).map((item, index) => (
                                     <tr key={index} className={`border-b border-zinc-800 transition-all duration-200 hover:bg-zinc-800`}>
-                                        <td className="py-4 px-6 text-zinc-300">{item.desc}</td>
-                                        <td className="py-4 px-6 text-zinc-300">{item.proof}</td>
-                                        <td className="py-4 px-6 text-zinc-300">{item.title}</td>
+                                        <td className="py-4 px-6 text-zinc-300">{evidence[item].description}</td>
+                                        <td className="py-4 px-6 text-zinc-300">{evidence[item].type}</td>
+                                        <td className="py-4 px-6 text-zinc-300">{evidence[item].uploaded_date}</td>
                                     </tr>
                                 ))
                             ) : (
