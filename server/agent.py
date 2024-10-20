@@ -1,4 +1,9 @@
+from datetime import datetime
+
 import PIL
+from dotenv import load_dotenv
+
+load_dotenv()  # It must be before llama_index import
 from llama_index.core.tools import FunctionTool
 from llama_index.llms.openai import OpenAI
 from llama_index.core.agent import ReActAgent
@@ -15,7 +20,19 @@ import asyncio
 from contextlib import redirect_stdout
 from io import StringIO
 
+import firebase_admin
+from firebase_admin import credentials, db
+
+# Path to your Firebase service account key file
+cred = credentials.Certificate('./firebase_creds.json')
+
+# Initialize the app with the service account and the Firebase database URL
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://tidal-bevobaddies-default-rtdb.firebaseio.com'
+})
+
 # Function to capture output in real-time
+"""
 class CapturingOutput(StringIO):
     def __init__(self, websocket=None):
         super().__init__()
@@ -26,8 +43,65 @@ class CapturingOutput(StringIO):
         # Send output to WebSocket in real-time
         if self.websocket:
             asyncio.create_task(self.websocket.send_text(s.strip()))
+"""
 
-todos = []
+
+# Function to write dispute data to Firebase RTDB
+
+def write_dispute_to_firebase(transaction_number: int, dispute_data: Dict[str, str]) -> bool:
+    """Writes disputes to database
+    :param transaction_number: the provided transaction number of the dispute
+    :param dispute_data: a dict representing the disput in the form
+    {'cardholderName': 'bob',
+    'disputedAmount': '$100.00',
+    'lastFourDigits': 1234,
+    'reason': 'accidental purchase',
+    'reasonCode': 'Visa 10.1',
+    'status': 'Pending',
+    'transactionDate': '1900-01-01'}
+    :return True upon completion"""
+    # Reference to the disputes path with the transaction number
+    ref = db.reference(f'disputes/{transaction_number}')
+
+    # Writing the dispute data to the reference
+    ref.update(dispute_data)
+    print(f"Success! data written under transaction number {transaction_number}")
+    return True
+
+
+def add_evidence_to_dispute_db(transaction_number: int, evidence_data: Dict[str, Any]) -> bool:
+    """
+    Adds evidence to a specific dispute in Firebase with an automatically assigned evidence ID (eid).
+
+    :param transaction_number: The transaction number (int) under which the dispute is stored.
+    :param evidence_data: A dictionary containing the evidence details in the form of:
+    AttributedDict({
+    'type': 'receipt',
+    'description': 'Receipt showing the purchase was authorized',
+    })
+    :return True upon completion
+    """
+    current_date = datetime.now()
+
+    # Format the current date as YYYY-MM-DD
+    formatted_date = current_date.strftime('%Y-%m-%d')
+    evidence_data['uploaded_date'] = formatted_date
+    # Reference to the evidence path under the transaction number
+    ref = db.reference(f'disputes/{transaction_number}/evidence')
+
+    # Use push() to generate a new unique ID for the evidence
+    new_evidence_ref = ref.push()
+
+    # Writing the evidence data to the new reference
+    new_evidence_ref.set(evidence_data)
+
+    # Retrieve the automatically generated evidence ID (eid)
+    evidence_id = new_evidence_ref.key
+    print(f"Evidence added under transaction {transaction_number} with auto-assigned evidence ID {evidence_id}")
+    return True
+
+write_dispute_to_firebase_func = FunctionTool.from_defaults(fn=write_dispute_to_firebase)
+add_evidence_to_dispute_db_func = FunctionTool.from_defaults(fn=add_evidence_to_dispute_db)
 """
 get_fields_function = FunctionTool.from_defaults(fn=get_fields)
 get_data_function = FunctionTool.from_defaults(fn=get_data)
@@ -54,6 +128,8 @@ llm = OpenAI(model="gpt-4o")
 # initialize ReAct agent
 agent = ReActAgent.from_tools(
     [
+        write_dispute_to_firebase_func,
+        add_evidence_to_dispute_db_func
     ],
     llm=llm,
     verbose=True,
@@ -117,9 +193,10 @@ for email in emails:
                 email sender: {email['sender']}
                 email subject: {email['subject']}
                 Based on the email above, do one of the following tasks:
-                1. Download the attachment, fill out the pdf with appropriate function (if there's no fields use image-related functions), and open the edited version.
-                2. Add the email as a dictionary to the todo list. Dictionary should have the following keys: subject, sender, snippet, due_date. Summarize the body.
-                3. Schedule a meeting with the sender of the email if the email has timeslots instead of todo tasks.
-                4. Review the pull-request and suggest any changes to make before merging. Write code suggestions to GitHub as a comment.
+                1. If it is an email about a chargeback dispute, save it to the database under disputes.
+                Look through sources and find evidence that can be used for the chargeback dispute and update the database under disputes.
+                2. If it is an email that could be used as evidence for a chargeback dispute such as delivery,
+                figure out which chargeback it can be saved under, and save it under sources/transaction_id.
+                3. If the email is resolving a dispute, find the dispute and mark it as resolved.
                 """
     agent.chat(email_content)
