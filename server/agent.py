@@ -173,21 +173,17 @@ email_to_pdf_func = FunctionTool.from_defaults(fn=email_to_pdf)
 llm = OpenAI(model="gpt-4o")
 
 # initialize ReAct agent
-agent = ReActAgent.from_tools(
-    [
-        write_dispute_to_firebase_func,
-        add_evidence_to_dispute_db_func,
-        get_evidence_of_dispute_db_func,
-        get_dispute_db_func,
-        email_to_pdf_func
-    ],
-    llm=llm,
-    verbose=True,
-    max_iterations=10,
-)
 
 
 def check_dispute():
+    agent = ReActAgent.from_tools(
+        [
+            write_dispute_to_firebase_func,
+        ],
+        llm=llm,
+        verbose=True,
+        max_iterations=10,
+    )
     emails = run_email()
     for email in emails:
         email_content = f"""
@@ -208,6 +204,17 @@ def check_dispute():
 
 
 def check_evidence():
+    agent = ReActAgent.from_tools(
+        [
+            add_evidence_to_dispute_db_func,
+            get_evidence_of_dispute_db_func,
+            get_dispute_db_func,
+            email_to_pdf_func
+        ],
+        llm=llm,
+        verbose=True,
+        max_iterations=10,
+    )
     emails = run_email()
     for email in emails:
         email_content = f"""
@@ -226,3 +233,6 @@ def check_evidence():
                         """
         agent.chat(email_content)
         agent.reset()
+
+check_dispute()
+check_evidence()
