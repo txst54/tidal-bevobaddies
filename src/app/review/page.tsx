@@ -27,7 +27,7 @@ function reviewPage() {
                         <thead>
                             <tr className="bg-zinc-900 text-zinc-400 uppercase text-xs">
                                 <DashboardTh title={"Requirements"} dir={"left"} bool />
-                                <DashboardTh title={"Proofs"} dir={"left"} bool />
+                                <DashboardTh title={"Proofs"} dir={"right"} bool />
                             </tr>
                         </thead>
                         <tbody className="text-zinc-400 text-sm font-light">

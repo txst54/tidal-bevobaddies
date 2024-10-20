@@ -1,5 +1,5 @@
 import React from 'react';
-import {TidalLogo } from '@phosphor-icons/react';
+import { TidalLogo } from '@phosphor-icons/react';
 
 function NavBar() {
     return (
@@ -12,7 +12,7 @@ function NavBar() {
                     <button className="text-white bg-transparent border border-white px-4 py-2 rounded hover:bg-white hover:text-black transition duration-200">
                         Log In
                     </button>
-                    <button className="text-black bg-white px-4 py-2 rounded hover:bg-gray-200 transition duration-200">
+                    <button className="text-black bg-white border border-transparent px-4 py-2 rounded hover:bg-gray-200 hover:text-black transition duration-200">
                         Sign Up
                     </button>
                 </div>

@@ -47,10 +47,20 @@ const ChargebackTable = () => {
     const router = useRouter();
     const chargebacks = [
         {
+            transactionId: '5566778899',
+            cardholderName: 'Emily Carter',
+            lastFourDigits: '4321',
+            transactionDate: '2024-09-19',
+            disputedAmount: '$150.00',
+            reasonCode: 'American Express 2491',
+            reason: 'Unauthorized Transaction',
+            status: 'Action',
+        },
+        {
             transactionId: '1234567890',
             cardholderName: 'John Doe',
             lastFourDigits: '1234',
-            transactionDate: '2024-08-12',
+            transactionDate: '2024-09-15',
             disputedAmount: '$250.00',
             reasonCode: 'Visa 13.1',
             reason: 'Merchandise Not Received',
@@ -63,7 +73,18 @@ const ChargebackTable = () => {
             transactionDate: '2024-09-15',
             disputedAmount: '$100.00',
             reasonCode: 'Mastercard 4853',
-            reason: 'Goods or Services Not Received',
+            reason: 'Credit not Processed',
+            status: 'Resolved',
+        },
+
+        {
+            transactionId: '2048105824',
+            cardholderName: 'Jake Johnson',
+            lastFourDigits: '4221',
+            transactionDate: '2024-09-13',
+            disputedAmount: '$80.00',
+            reasonCode: 'Chase 1931',
+            reason: 'Processing errors',
             status: 'Resolved',
         },
         // Add more chargeback data here...
@@ -113,9 +134,10 @@ const ChargebackTable = () => {
                         <td className="py-3 px-6 text-left">
                                         <span
                                             className={`py-1 px-3 rounded-full text-xs ${
-                                                chargeback.status === 'Resolved' ?
-                                                    'bg-green-200 text-green-800' :
-                                                    'bg-yellow-200 text-yellow-800'
+                                                chargeback.status === 'Resolved' ? 'bg-green-200 text-green-800' :
+                                                chargeback.status === 'Pending' ? 'bg-yellow-200 text-yellow-800' :
+                                                chargeback.status === 'Action' ? 'bg-red-200 text-red-800' :
+                                                'bg-gray-200 text-gray-800'
                                             }`}
                                         >
                                           {chargeback.status}
