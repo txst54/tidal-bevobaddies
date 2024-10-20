@@ -38,3 +38,4 @@ next-env.d.ts
 ./server/creds.json
 ./token.json
 ./server/firebase_creds.json
+./server/.env
