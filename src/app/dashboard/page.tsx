@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {getDatabase, onValue, ref, get} from "@firebase/database";
 import { app } from '../firebase'
+import {ArrowsClockwise} from "@phosphor-icons/react";
 
 const DashboardTh = ({ title, dir, bool }: { title: string; dir?: string, bool?: boolean }) => {
     return (
@@ -91,27 +92,37 @@ const ChargebackTable = () => {
         },
         // Add more chargeback data here...
     ]);
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const db = getDatabase(app); // Get the Firebase Realtime Database instance
-                const disputesRef = ref(db, 'disputes'); // Reference to the "example" path in your database
-                const snapshot = await get(disputesRef); // Get the data once
 
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    // Convert the data to an array if needed
-                    const dataArray = Object.keys(data).map((key) => ({
-                        transactionId: key,
-                        ...data[key],
-                    }));
-                    setChargebacks(dataArray);
-                }
-            } catch (error) {
-                console.error('Error fetching data:', error);
+    const fetchData = async () => {
+        try {
+            const db = getDatabase(app); // Get the Firebase Realtime Database instance
+            const disputesRef = ref(db, 'disputes'); // Reference to the "example" path in your database
+            const snapshot = await get(disputesRef); // Get the data once
+
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                // Convert the data to an array if needed
+                const dataArray = Object.keys(data).map((key) => ({
+                    transactionId: key,
+                    ...data[key],
+                }));
+                setChargebacks(dataArray);
             }
-        };
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
 
+    const handleRefresh = async (e) => {
+        try {
+            const response = await fetch (`http://localhost:8000/refresh`);
+            fetchData();
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    useEffect(() => {
         fetchData();
     }, []);
     return (
@@ -171,6 +182,13 @@ const ChargebackTable = () => {
                 ))}
                 </tbody>
             </table>
+            <div className="flex justify-end space-x-4 mt-4">
+                <button
+                    className="text-white px-2 py-2 rounded hover:bg-zinc-500 transition duration-200"
+                    onClick={handleRefresh}>
+                    <ArrowsClockwise size={32} />
+                </button>
+            </div>
         </div>
     );
 }
