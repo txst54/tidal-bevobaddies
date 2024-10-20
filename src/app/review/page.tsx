@@ -50,7 +50,7 @@ interface DisputeData {
     reasonCode?: string;
     status?: string;
     transactionDate?: string;
-    message?: string;
+    msg?: string;
 }
 
 function ReviewPage() {
@@ -83,9 +83,9 @@ function ReviewPage() {
         try {
             const db = getDatabase(app); // Ensure `app` is your initialized Firebase app
             const disputesRef = ref(db, `disputes/${transactionId}`);
-            const message = dispute.message ? dispute.message : "";
+            const msg = dispute.msg ? dispute.msg : "";
             // Update the message field in the specified dispute
-            await update(disputesRef, { message });
+            await update(disputesRef, { msg });
 
             console.log(`Message updated for transaction ID ${transactionId}`);
         } catch (error) {
@@ -173,19 +173,19 @@ function ReviewPage() {
                 </div>
                 <h3 className="font-bold text-zinc-500 text-lg px-8">Dispute Message: </h3>
                 <textarea
-                    className="mt-4 w-11/12 h-40 p-4 bg-zinc-800 text-white rounded-lg resize-none border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    value={dispute.message ? dispute.message : ""}
+                    className="mx-auto mt-4 w-11/12 min-h-[200px] p-4 bg-zinc-800 text-white rounded-lg resize-none border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={dispute.msg ? dispute.msg : ""}
                     onChange={(e) => {
                         setDispute((prev) => ({
                             ...prev,
-                            message: e.target.value, // Update the text field in the Dispute object
+                            msg: e.target.value, // Update the text field in the Dispute object
                         }));
                     }}
                     placeholder="AI generated dispute message"
-                    rows={5}
-                    cols={30}
+                    rows={12}
+                    cols={40}
                 >
-                    {dispute.message ? dispute.message : ""}
+                    {dispute.msg ? dispute.msg : ""}
                 </textarea>
                 <div className="flex justify-end space-x-4 m-4 mr-8">
                     <button
