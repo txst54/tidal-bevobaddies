@@ -147,20 +147,30 @@ def email_to_pdf(email_data: Dict[str, str]) -> str:
     pdf.add_page()
 
     # Set font for title
-    pdf.set_font('Arial', 'B', 16)
+    pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
+    pdf.set_font('DejaVu', '', 12)
+
     pdf.cell(200, 10, f"Subject: {email_data['subject'].encode('ascii', 'ignore').decode()}",
              ln=True, align='C')
 
-    # Set font for email body
-    pdf.set_font('Arial', '', 12)
     pdf.ln(10)
     pdf.multi_cell(0, 10, f"From: {email_data['sender'].encode('ascii', 'ignore').decode()}")
-    pdf.multi_cell(0, 10, f"Body: {email_data['body'].encode('ascii', 'ignore').decode()}")
+    pdf.multi_cell(0, 10, f"Body: {email_data['body']}")
 
     # Save the PDF to the specified path
     filename = str(uuid.uuid4())
     pdf.output(f"./media/{filename}.pdf")
     return filename
+
+
+def write_dispute_msg_db(msg: str, transaction_id: str) -> bool:
+    """Writes the dispute message fighting the chargeback to db
+    :param msg dispute message to write
+    :param transaction_id of the dispute
+    :return boolean of success"""
+    ref = db.reference(f'disputes/{transaction_id}')
+    ref.update({msg: msg})
+    return True
 
 
 write_dispute_to_firebase_func = FunctionTool.from_defaults(fn=write_dispute_to_firebase)
@@ -171,6 +181,7 @@ email_to_pdf_func = FunctionTool.from_defaults(fn=email_to_pdf)
 
 # initialize llm
 llm = OpenAI(model="gpt-4o")
+
 
 # initialize ReAct agent
 
@@ -233,3 +244,37 @@ def check_evidence():
                         """
         agent.chat(email_content)
         agent.reset()
+
+
+def get_dispute_msgs():
+    agent = ReActAgent.from_tools(
+        [
+
+        ],
+        llm=llm,
+        verbose=True,
+        max_iterations=10,
+    )
+    ref = db.reference(f'disputes')
+
+    # Get the evidence data from the database
+    dispute_data = ref.get()
+
+    # Check if evidence_data is None (i.e., no evidence exists)
+    if dispute_data is None:
+        print(f"No data found for disputes.")
+        return []
+
+    # Convert the evidence data to a list of dictionaries
+    for dispute_id, dispute in dispute_data.items():
+        email_content = f"""
+                            transaction id: {dispute_id}
+                            information: {dispute}
+                            Based on the dispute above, generate a message fighting the chargebacks based on evidence provided and save it to dispute. 
+                            """
+        agent.chat(email_content)
+        agent.reset()
+
+check_dispute()
+check_evidence()
+get_dispute_msgs()
