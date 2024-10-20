@@ -33,23 +33,52 @@ function reviewPage() {
     const [table, setTable] = useState<SourceData>({});
     const searchParams = useSearchParams();
     const transactionId = searchParams.get('id');
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const db = getDatabase(app); // Get the Firebase Realtime Database instance
-                const exampleRef = ref(db, `sources/${transactionId}`); // Reference to the "example" path in your database
-                const snapshot = await get(exampleRef); // Get the data once
+    const fetchDataFromFirebase = async () => {
+        try {
+            const db = getDatabase(app); // Get the Firebase Realtime Database instance
+            const exampleRef = ref(db, `sources/${transactionId}`); // Reference to the "example" path in your database
+            const snapshot = await get(exampleRef); // Get the data once
 
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    setTable(data);
-                }
-            } catch (error) {
-                console.error('Error fetching data:', error);
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                setTable(data);
             }
-        };
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+    const fetchDataFromEmails = async () => {
+        if (!transactionId) {
+            return false;
+        }
+        try {
+            const response = await fetch(`http://localhost:8000/process-dispute?id=${encodeURIComponent(transactionId)}`, {
+                method: 'GET',
+            });
 
-        fetchData();
+            if (!response.ok) {
+                throw new Error(`Error: ${response.status}`);
+            }
+
+            // Parse the response as JSON
+            const data = await response.json();
+
+            // Assuming the server responds with { "updated": true } or { "updated": false }
+            const updated = data.updated;
+
+            console.log('Updated status:', updated);
+            return updated;
+        } catch (error) {
+            console.error('Failed to fetch updated status:', error);
+            return false;
+        }
+    }
+    const handleClick = async (e:any) => {
+        e.preventDefault();
+        fetchDataFromEmails().then((result) => {if (result) {fetchDataFromEmails()}});
+    };
+    useEffect(() => {
+        fetchDataFromFirebase();
     }, []);
     return (
         <div className="flex flex-row w-full h-screen bg-black">
@@ -57,7 +86,6 @@ function reviewPage() {
             <div className="flex flex-col w-full">
                 <NavBar />
                 <div className="flex-grow p-4">
-                    <p>{transactionId}</p>
                     <table className="min-w-full border-collapse rounded-lg overflow-hidden shadow-lg">
                         <thead>
                         <tr className="bg-zinc-900 text-zinc-400 uppercase text-xs">
@@ -102,6 +130,11 @@ function reviewPage() {
                     </table>
 
                     <div className="flex justify-end space-x-4 mt-4"> {/* Added margin top for spacing */}
+                        <button
+                            className="bg-zinc-600 text-white px-4 py-2 rounded hover:bg-zinc-500 transition duration-200"
+                            onClick={handleClick}>
+                            Refresh
+                        </button>
                         <button
                             className="bg-zinc-600 text-white px-4 py-2 rounded hover:bg-zinc-500 transition duration-200">
                             Confirm

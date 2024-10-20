@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {getDatabase, onValue, ref, get} from "@firebase/database";
 import { app } from '../firebase'
 
-const DashboardTh = ({ title, dir, bool }: { title: string; dir: string | undefined, bool: boolean }) => {
+const DashboardTh = ({ title, dir, bool }: { title: string; dir?: string, bool?: boolean }) => {
     return (
         <th
             className={`py-3 px-6 text-left ${bool ? "font-semibold" : "font-medium"} border-zinc-800
