@@ -169,7 +169,7 @@ def write_dispute_msg_db(msg: str, transaction_id: str) -> bool:
     :param transaction_id of the dispute
     :return boolean of success"""
     ref = db.reference(f'disputes/{transaction_id}')
-    ref.update({msg: msg})
+    ref.update({'msg': msg})
     return True
 
 
@@ -178,6 +178,7 @@ add_evidence_to_dispute_db_func = FunctionTool.from_defaults(fn=add_evidence_to_
 get_evidence_of_dispute_db_func = FunctionTool.from_defaults(fn=get_evidence_of_dispute_db)
 get_dispute_db_func = FunctionTool.from_defaults(fn=get_dispute_db)
 email_to_pdf_func = FunctionTool.from_defaults(fn=email_to_pdf)
+write_dispute_msg_db_func = FunctionTool.from_defaults(fn=write_dispute_msg_db)
 
 # initialize llm
 llm = OpenAI(model="gpt-4o")
@@ -249,7 +250,7 @@ def check_evidence():
 def get_dispute_msgs():
     agent = ReActAgent.from_tools(
         [
-
+            write_dispute_msg_db_func
         ],
         llm=llm,
         verbose=True,
@@ -275,6 +276,4 @@ def get_dispute_msgs():
         agent.chat(email_content)
         agent.reset()
 
-check_dispute()
-check_evidence()
 get_dispute_msgs()
