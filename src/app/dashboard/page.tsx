@@ -1,10 +1,12 @@
 "use client";
 import NavBar from "@/components/navbar";
 import SideBar from "@/components/sidebar";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {getDatabase, onValue, ref, get} from "@firebase/database";
+import { app } from '../firebase'
 
-const DashboardTh = ({ title, dir, bool }: { title: string; dir: string | undefined, bool: boolean }) => {
+const DashboardTh = ({ title, dir, bool }: { title: string; dir?: string, bool?: boolean }) => {
     return (
         <th
             className={`py-3 px-6 text-left ${bool ? "font-semibold" : "font-medium"} border-zinc-800
@@ -45,7 +47,7 @@ const Chargebacks: React.FC<ChargebackProps> = ({ subtitle, amount, percentage, 
 
 const ChargebackTable = () => {
     const router = useRouter();
-    const chargebacks = [
+    const [chargebacks, setChargebacks] = useState([
         {
             transactionId: '5566778899',
             cardholderName: 'Emily Carter',
@@ -88,8 +90,30 @@ const ChargebackTable = () => {
             status: 'Resolved',
         },
         // Add more chargeback data here...
-    ];
+    ]);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const db = getDatabase(app); // Get the Firebase Realtime Database instance
+                const disputesRef = ref(db, 'disputes'); // Reference to the "example" path in your database
+                const snapshot = await get(disputesRef); // Get the data once
 
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    // Convert the data to an array if needed
+                    const dataArray = Object.keys(data).map((key) => ({
+                        transactionId: key,
+                        ...data[key],
+                    }));
+                    setChargebacks(dataArray);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        fetchData();
+    }, []);
     return (
         <div className="overflow-x-auto ">
             <table className="min-w-full table-auto">
@@ -122,7 +146,7 @@ const ChargebackTable = () => {
                     <tr key={index}
                         className="border-b border-l border-r border-zinc-800 transition-all duration-200 hover:bg-zinc-800"
                     onClick={() => {
-                        router.push(`/review/${chargeback.transactionId}`);
+                        router.push(`/review?id=${chargeback.transactionId}`);
                     }}>
                         <td className="py-5 px-6 text-left whitespace-nowrap text-zinc-300">{chargeback.transactionId}</td>
                         <td className="py-3 px-6 text-left">{chargeback.cardholderName}</td>

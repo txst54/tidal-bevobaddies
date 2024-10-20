@@ -1,7 +1,7 @@
 import os
 import base64
 from auth import google_auth  # Assumes this handles Google API authentication
-from googleapiclient.discovery import build
+
 
 def get_email_content(service, user_id, msg_id):
     try:
@@ -72,6 +72,7 @@ def get_email_content(service, user_id, msg_id):
         print(f"An error occurred: {error}")
         return None
 
+
 def run_email():
     gmail_service, _ = google_auth()
     user_id = "me"
@@ -94,6 +95,7 @@ def run_email():
             if email_data:
                 data.append(email_data)
     return data
+
 
 # Run the function and print the results
 print(run_email())
