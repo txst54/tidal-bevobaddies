@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 import PIL
@@ -7,18 +8,9 @@ load_dotenv()  # It must be before llama_index import
 from llama_index.core.tools import FunctionTool
 from llama_index.llms.openai import OpenAI
 from llama_index.core.agent import ReActAgent
+from fpdf import FPDF
 from typing import List, Dict, Any, Annotated
-import difflib
-import subprocess
 from get_emails import run_email
-from fastapi import FastAPI
-from fastapi import WebSocket
-from fastapi import WebSocketDisconnect
-from llama_index.core import set_global_handler
-import sys
-import asyncio
-from contextlib import redirect_stdout
-from io import StringIO
 
 import firebase_admin
 from firebase_admin import credentials, db
@@ -30,20 +22,6 @@ cred = credentials.Certificate('./firebase_creds.json')
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://tidal-bevobaddies-default-rtdb.firebaseio.com'
 })
-
-# Function to capture output in real-time
-"""
-class CapturingOutput(StringIO):
-    def __init__(self, websocket=None):
-        super().__init__()
-        self.websocket = websocket
-
-    def write(self, s):
-        super().write(s)
-        # Send output to WebSocket in real-time
-        if self.websocket:
-            asyncio.create_task(self.websocket.send_text(s.strip()))
-"""
 
 
 # Function to write dispute data to Firebase RTDB
@@ -77,6 +55,7 @@ def add_evidence_to_dispute_db(transaction_number: int, evidence_data: Dict[str,
     :param evidence_data: A dictionary containing the evidence details in the form of:
     AttributedDict({
     'type': 'receipt',
+    'filename': 'filename.pdf'
     'description': 'Receipt showing the purchase was authorized',
     })
     :return True upon completion
@@ -100,27 +79,95 @@ def add_evidence_to_dispute_db(transaction_number: int, evidence_data: Dict[str,
     print(f"Evidence added under transaction {transaction_number} with auto-assigned evidence ID {evidence_id}")
     return True
 
+
+def get_evidence_of_dispute_db(transaction_number: int) -> List[Dict[str, Any]]:
+    """
+    Retrieves all evidence associated with a specific dispute from Firebase.
+
+    :param transaction_number: The transaction number (int) under which the dispute is stored.
+    :return: A list of dictionaries representing the evidence, or an empty list if no evidence is found.
+    """
+    # Reference to the evidence path under the transaction number
+    ref = db.reference(f'disputes/{transaction_number}/evidence')
+
+    # Get the evidence data from the database
+    evidence_data = ref.get()
+
+    # Check if evidence_data is None (i.e., no evidence exists)
+    if evidence_data is None:
+        print(f"No evidence found for transaction {transaction_number}.")
+        return []
+
+    # Convert the evidence data to a list of dictionaries
+    evidence_list = []
+    for evidence_id, evidence in evidence_data.items():
+        # Add the evidence ID to each evidence dictionary
+        evidence['eid'] = evidence_id
+        evidence_list.append(evidence)
+
+    return evidence_list
+
+
+def get_dispute_db() -> List[Dict[str, Any]]:
+    """
+    Retrieves all disputes
+    :return: A list of dictionaries representing the disputes, or an empty list if no disputes are found.
+    """
+    # Reference to the evidence path under the transaction number
+    ref = db.reference(f'disputes')
+
+    # Get the evidence data from the database
+    dispute_data = ref.get()
+
+    # Check if evidence_data is None (i.e., no evidence exists)
+    if dispute_data is None:
+        print(f"No data found for disputes.")
+        return []
+
+    # Convert the evidence data to a list of dictionaries
+    dispute_list = []
+    for dispute_id, dispute in dispute_data.items():
+        # Add the evidence ID to each evidence dictionary
+        dispute['id'] = dispute_id
+        dispute_list.append(dispute)
+
+    return dispute_list
+
+
+def email_to_pdf(email_data: Dict[str, str]) -> str:
+    """
+    Converts email content into a PDF and saves it to the specified file path.
+
+    :param email_data (Dict[str, str]): A dictionary containing the email's content.
+            It should include the fields like 'body', 'subject', 'sender', etc.
+
+    :return filename
+    """
+    pdf = FPDF()
+    pdf.add_page()
+
+    # Set font for title
+    pdf.set_font('Arial', 'B', 16)
+    pdf.cell(200, 10, f"Subject: {email_data['subject'].encode('ascii', 'ignore').decode()}",
+             ln=True, align='C')
+
+    # Set font for email body
+    pdf.set_font('Arial', '', 12)
+    pdf.ln(10)
+    pdf.multi_cell(0, 10, f"From: {email_data['sender'].encode('ascii', 'ignore').decode()}")
+    pdf.multi_cell(0, 10, f"Body: {email_data['body'].encode('ascii', 'ignore').decode()}")
+
+    # Save the PDF to the specified path
+    filename = str(uuid.uuid4())
+    pdf.output(f"./media/{filename}.pdf")
+    return filename
+
+
 write_dispute_to_firebase_func = FunctionTool.from_defaults(fn=write_dispute_to_firebase)
 add_evidence_to_dispute_db_func = FunctionTool.from_defaults(fn=add_evidence_to_dispute_db)
-"""
-get_fields_function = FunctionTool.from_defaults(fn=get_fields)
-get_data_function = FunctionTool.from_defaults(fn=get_data)
-fill_pdf_function = FunctionTool.from_defaults(fn=fill_pdf)
-open_pdf_function = FunctionTool.from_defaults(fn=open_pdf)
-add_todo_function = FunctionTool.from_defaults(fn=add_todo)
-images_to_pdf_function = FunctionTool.from_defaults(fn=images_to_pdf)
-get_fields_from_image_function = FunctionTool.from_defaults(fn=get_fields_from_image)
-fill_pdf_via_image_function = FunctionTool.from_defaults(fn=fill_pdf_via_image)
-read_pull_function = FunctionTool.from_defaults(fn=read_pull)
-find_commit_sha_by_code_segment_function = FunctionTool.from_defaults(
-    fn=find_commit_sha_by_code_segment
-)
-post_comment_to_pr_function = FunctionTool.from_defaults(fn=post_comment_to_pr)
-prioritize_emails_to_todoist_function = FunctionTool.from_defaults(
-    fn=prioritize_emails_to_todoist
-)
-schedule_meeting_function = FunctionTool.from_defaults(fn=schedule_meeting)
-"""
+get_evidence_of_dispute_db_func = FunctionTool.from_defaults(fn=get_evidence_of_dispute_db)
+get_dispute_db_func = FunctionTool.from_defaults(fn=get_dispute_db)
+email_to_pdf_func = FunctionTool.from_defaults(fn=email_to_pdf)
 
 # initialize llm
 llm = OpenAI(model="gpt-4o")
@@ -129,74 +176,53 @@ llm = OpenAI(model="gpt-4o")
 agent = ReActAgent.from_tools(
     [
         write_dispute_to_firebase_func,
-        add_evidence_to_dispute_db_func
+        add_evidence_to_dispute_db_func,
+        get_evidence_of_dispute_db_func,
+        get_dispute_db_func,
+        email_to_pdf_func
     ],
     llm=llm,
     verbose=True,
     max_iterations=10,
 )
 
-# app = FastAPI()
 
-# Store connected clients in a list
-# clients = []
-
-# @app.websocket("/ws")
-# async def websocket_endpoint(websocket: WebSocket):
-#     await websocket.accept()
-#     clients.append(websocket)
-#     try:
-#         await websocket.send_text("Worker 1 has started...")
-#         emails = run_email()
-#
-#         # Start the email processing with WebSocket logging
-#         await process_emails(agent, emails, websocket)
-#     except WebSocketDisconnect:
-#         clients.remove(websocket)
-#         print("Client disconnected")
+def check_dispute():
+    emails = run_email()
+    for email in emails:
+        email_content = f"""
+                    email body: {email['content']}
+                    email attachments: {email['attachments']}
+                    email sender: {email['sender']}
+                    email subject: {email['subject']}
+                    Based on the email above, do one of the following tasks:
+                    1. If it is an email about a chargeback dispute, save it to the database under disputes.
+                    Look through sources and find evidence that can be used for the chargeback dispute and update the database under disputes.
+                    2. If it is an email with evidence concerning a chargeback dispute such as delivery or invoice, do nothing
+                    """
+        agent.chat(email_content)
+        agent.reset()
 
 
-# Function to broadcast logs to all connected WebSocket clients
-# async def broadcast_log(log_message: str):
-#     for client in clients:
-#         await client.send_text(log_message)
+""""""
 
 
-# async def process_emails(agent, emails, websocket):
-#     for email in emails:
-#         try:
-#             await broadcast_log(f"Processing email from {email['sender']}")
-#             email_content = f"""
-#                         email body: {email['content']}
-#                         email attachments: {email['attachments']}
-#                         email sender: {email['sender']}
-#                         email subject: {email['subject']}
-#                         Based on the email above, do one of the following tasks:
-#                         1. Download the attachment, fill out the pdf with appropriate function (if there's no fields use image-related functions), and open the edited version.
-#                         2. Add the email as a dictionary to the todo list. Dictionary should have the following keys: subject, sender, snippet, due_date. Summarize the body.
-#                         3. Schedule a meeting with the sender of the email if the email has timeslots instead of todo tasks.
-#                         4. Review the pull-request and suggest any changes to make before merging. Write code suggestions to GitHub as a comment.
-#                         """
-#             # Redirect stdout to capture agent's output in real-time
-#             with CapturingOutput(websocket=websocket) as output_buffer:
-#                 with redirect_stdout(output_buffer):
-#                     # Run the agent and capture output in real-time
-#                     agent.chat(email_content)
-#         except Exception as e:
-#             await websocket.send_text(f"Error processing email: {str(e)}")
-
-emails = run_email()
-for email in emails:
-    email_content = f"""
-                email body: {email['content']}
-                email attachments: {email['attachments']}
-                email sender: {email['sender']}
-                email subject: {email['subject']}
-                Based on the email above, do one of the following tasks:
-                1. If it is an email about a chargeback dispute, save it to the database under disputes.
-                Look through sources and find evidence that can be used for the chargeback dispute and update the database under disputes.
-                2. If it is an email that could be used as evidence for a chargeback dispute such as delivery,
-                figure out which chargeback it can be saved under, and save it under sources/transaction_id.
-                3. If the email is resolving a dispute, find the dispute and mark it as resolved.
-                """
-    agent.chat(email_content)
+def check_evidence():
+    emails = run_email()
+    for email in emails:
+        email_content = f"""
+                        email body: {email['content']}
+                        email attachments: {email['attachments']}
+                        email sender: {email['sender']}
+                        email subject: {email['subject']}
+                        Based on the email above, do one of the following tasks:
+                        1. If it is an email about a chargeback dispute from a bank or official source, ignore. 
+                        2. If it is an email that could be used as evidence for a chargeback dispute such as delivery,
+                        check if it fits under any of the existing disputes, if so,  
+                        check if it doesn't already exist under the matching dispute, 
+                        and if it is a new evidence, 
+                        convert the email to pdf, 
+                        and save it under sources/transaction_id.
+                        """
+        agent.chat(email_content)
+        agent.reset()
