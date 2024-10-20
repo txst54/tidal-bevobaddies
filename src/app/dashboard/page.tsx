@@ -74,8 +74,8 @@ const ChargebackTable = () => {
         const fetchData = async () => {
             try {
                 const db = getDatabase(app); // Get the Firebase Realtime Database instance
-                const exampleRef = ref(db, 'disputes'); // Reference to the "example" path in your database
-                const snapshot = await get(exampleRef); // Get the data once
+                const disputesRef = ref(db, 'disputes'); // Reference to the "example" path in your database
+                const snapshot = await get(disputesRef); // Get the data once
 
                 if (snapshot.exists()) {
                     const data = snapshot.val();
@@ -125,7 +125,7 @@ const ChargebackTable = () => {
                     <tr key={index}
                         className="border-b border-l border-r border-zinc-800 transition-all duration-200 hover:bg-zinc-800"
                     onClick={() => {
-                        router.push(`/review/${chargeback.transactionId}`);
+                        router.push(`/review?id=${chargeback.transactionId}`);
                     }}>
                         <td className="py-5 px-6 text-left whitespace-nowrap text-zinc-300">{chargeback.transactionId}</td>
                         <td className="py-3 px-6 text-left">{chargeback.cardholderName}</td>
